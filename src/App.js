@@ -3,11 +3,14 @@ import './App.css';
 
 class App extends Component {
   render() {
+    const name = 'John Wick';
+    const loading = false;
+    const showName = false;
+
     return (
-      <React.Fragment>
-        <h1>Hello from React</h1>
-        <label htmlFor='name'>Name</label>
-      </React.Fragment>
+      <div className='App'>
+        {loading ? <h4>Loading...</h4> : <h1>Hello {showName && name}</h1>}
+      </div>
     );
   }
 }
