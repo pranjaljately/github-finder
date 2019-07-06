@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import Navbar from './components/layout/Navbar';
 import Alert from './components/layout/Alert';
 import Users from './components/users/Users';
@@ -6,16 +6,16 @@ import User from './components/users/User';
 import Search from './components/users/Search';
 import About from './components/pages/About';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import GithubState from './context/github/GithubState';
 import './App.css';
 
-class App extends Component {
-  state = {
-    users: [],
-    user: {},
-    repos: [],
-    loading: false,
-    alert: null,
-  };
+const App = () => {
+  const [users, setUsers] = useState([]);
+  const [user, setUser] = useState({});
+  const [repos, setRepos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(null);
+
   // async componentDidMount() {
   //   this.setState({ loading: true });
 
@@ -30,8 +30,8 @@ class App extends Component {
   //   this.setState({ users: data, loading: false });
   // }
 
-  searchUsers = async text => {
-    this.setState({ loading: true });
+  const searchUsers = async text => {
+    setLoading(true);
 
     const res = await fetch(
       `https://api.github.com/search/users?q=${text}&client_id=${
@@ -40,11 +40,12 @@ class App extends Component {
     );
     const data = await res.json();
 
-    this.setState({ users: data.items, loading: false });
+    setUsers(data.items);
+    setLoading(false);
   };
 
-  getUser = async username => {
-    this.setState({ loading: true });
+  const getUser = async username => {
+    setLoading(true);
 
     const res = await fetch(
       `https://api.github.com/users/${username}?client_id=${
@@ -54,11 +55,12 @@ class App extends Component {
 
     const data = await res.json();
 
-    this.setState({ user: data, loading: false });
+    setUser(data);
+    setLoading(false);
   };
 
-  getUserRepos = async username => {
-    this.setState({ loading: true });
+  const getUserRepos = async username => {
+    setLoading(true);
 
     const res = await fetch(
       `https://api.github.com/users/${username}/repos?per_page=5&sort=created&direction=desc&client_id=${
@@ -68,42 +70,33 @@ class App extends Component {
 
     const data = await res.json();
 
-    this.setState({ repos: data, loading: false });
+    setRepos(data);
+    setLoading(false);
   };
 
-  clearUsers = () => {
-    this.setState({
-      users: [],
-      loading: false,
-    });
+  const clearUsers = () => {
+    setUsers([]);
+    setLoading(false);
   };
 
-  setAlert = (message, type) => {
-    this.setState({
-      alert: {
-        message,
-        type,
-      },
-    });
-
+  const showAlert = (message, type) => {
+    setAlert({ message, type });
     setTimeout(() => {
-      this.clearAlert();
+      clearAlert();
     }, 5000);
   };
 
-  clearAlert = () => {
-    this.setState({ alert: null });
+  const clearAlert = () => {
+    setAlert(null);
   };
 
-  render() {
-    const { users, user, repos, loading } = this.state;
-
-    return (
+  return (
+    <GithubState>
       <Router>
         <div className='App'>
           <Navbar />
           <div className='container'>
-            <Alert alert={this.state.alert} clearAlert={this.clearAlert} />
+            <Alert alert={alert} clearAlert={clearAlert} />
             <Switch>
               <Route
                 exact
@@ -111,10 +104,10 @@ class App extends Component {
                 render={props => (
                   <Fragment>
                     <Search
-                      searchUsers={this.searchUsers}
-                      clearUsers={this.clearUsers}
+                      searchUsers={searchUsers}
+                      clearUsers={clearUsers}
                       showClear={users.length > 0 ? true : false}
-                      setAlert={this.setAlert}
+                      setAlert={showAlert}
                     />
                     <Users loading={loading} users={users} />
                   </Fragment>
@@ -127,8 +120,8 @@ class App extends Component {
                 render={props => (
                   <User
                     {...props}
-                    getUser={this.getUser}
-                    getUserRepos={this.getUserRepos}
+                    getUser={getUser}
+                    getUserRepos={getUserRepos}
                     user={user}
                     loading={loading}
                     repos={repos}
@@ -139,8 +132,8 @@ class App extends Component {
           </div>
         </div>
       </Router>
-    );
-  }
-}
+    </GithubState>
+  );
+};
 
 export default App;
